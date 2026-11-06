@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="TXT 閱讀器">
 <title>TXT 閱讀器</title>
@@ -11,7 +11,7 @@
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="sepia"]){--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}
 :root[data-theme="sepia"]{--bg:#efe2c3;--fg:#43331c;--mut:#8c7650;--bar:#e4d4ae;--acc:#8a4b1f;--bd:#d2bf92}
-html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
+html,body{touch-action:pan-x pan-y;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
 body{padding-bottom:110px}body.focus{padding-bottom:40px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:4}
 button{font:inherit;color:inherit;background:none;border:0;padding:8px 12px;border-radius:8px}
@@ -21,6 +21,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;display:flex;a
 header b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
 footer{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--bd)}
 .row{display:flex;justify-content:space-between}
+.stt{font-size:12px;color:var(--mut);text-align:center;padding:2px 0}
 #sk{width:100%;accent-color:var(--acc);margin:4px 0}
 main{padding:0 18px}
 #tx{max-width:36em;margin:0 auto;padding:20px 0 40px;font-family:"Songti TC","Noto Serif TC",serif;line-height:1.9}
@@ -46,6 +47,7 @@ aside[hidden]{display:none}
 </header>
 <main><div id="tx"><p class="mut">點左上角「開啟」，選擇 txt 檔案。</p></div></main>
 <footer>
+  <div id="stt" class="stt"></div>
   <input type="range" id="sk" min="0" max="1000" value="0" aria-label="跳到位置">
   <div class="row"><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button><button id="fc">專注</button></div>
 </footer>
@@ -88,7 +90,7 @@ function show(n,text){
   const f=document.createDocumentFragment();
   for(const l of text.split(/\r?\n/)){const t=l.trim();if(!t)continue;const p=document.createElement('p');p.textContent=t;f.appendChild(p)}
   $('#tx').replaceChildren(f);
-  scrollTo(0,LS.g('pos:'+n,0)*maxScroll());
+  prog=Date.now();scrollTo(0,LS.g('pos:'+n,0)*maxScroll());
 }
 async function openBook(n){
   const t=await dbop('readonly',s=>s.get(n));
@@ -122,12 +124,25 @@ async function list(){
 $('#lb').onclick=()=>{$('#dr').hidden=false;list()};
 $('#cl').onclick=()=>$('#dr').hidden=true;
 
-$('#sk').oninput=e=>scrollTo(0,e.target.value/1000*maxScroll());
-let st;
+let prog=0,lastTouch=0,lastAuto=0,playing=false,drag=false,st;
+['touchstart','touchmove','touchend','pointerdown','wheel'].forEach(ev=>addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true}));
+const sk=$('#sk'),stt=$('#stt');
+function lock(on){playing=on;sk.disabled=on;stt.textContent=on?'朗讀中，進度條已鎖定（點此解除）':'未朗讀：拖動可跳到位置'}
+stt.onclick=()=>lock(false);
+sk.addEventListener('touchstart',()=>{drag=true},{passive:true});
+['touchend','touchcancel','pointerup','change'].forEach(ev=>sk.addEventListener(ev,()=>setTimeout(()=>{drag=false},250)));
+sk.oninput=e=>{prog=Date.now();scrollTo(0,e.target.value/1000*maxScroll())};
 window.onscroll=()=>{
-  $('#sk').value=scrollY/maxScroll()*1000;
+  const now=Date.now();
+  if(!drag)sk.value=scrollY/maxScroll()*1000;
+  // 沒有手指觸碰卻在捲動 = 朗讀螢幕自動捲動
+  if(!drag&&now-prog>1000&&now-lastTouch>3000){lastAuto=now;if(!playing)lock(true)}
   clearTimeout(st);st=setTimeout(()=>{if(name)LS.s('pos:'+name,scrollY/maxScroll())},300);
 };
+setInterval(()=>{if(playing&&Date.now()-lastAuto>45000)lock(false)},3000);
+lock(false);
+// 鎖定畫面:禁止雙指縮放(iOS 會忽略 user-scalable=no,所以另外攔截手勢)
+['gesturestart','gesturechange','gestureend'].forEach(ev=>addEventListener(ev,e=>e.preventDefault()));
 
 applyView();
 open().then(d=>{db=d;const l=LS.g('last',null);if(l)return openBook(l)})
