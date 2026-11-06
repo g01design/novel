@@ -106,13 +106,30 @@ async function refresh(){
 $('#list').onclick=e=>{const b=e.target.closest('button');if(b){$('#dr').hidden=true;go(+b.dataset.n)}};
 $('#bm').onclick=()=>$('#dr').hidden=false;
 $('#cl').onclick=()=>$('#dr').hidden=true;
+function splitBook(t){
+  const H=/^\s*第[0-9０-９一二三四五六七八九十百千零〇两]+[章回节節]/,lines=t.split(/\r?\n/),parts=[];let c=[];
+  for(const l of lines){if(H.test(l)&&l.trim().length<=40&&c.length){parts.push(c.join('\n'));c=[]}c.push(l)}
+  if(c.length)parts.push(c.join('\n'));
+  if(parts.length>1)return parts;
+  const out=[];let b='';
+  for(const l of lines){if(!l.trim())continue;b+=l+'\n';if(b.length>4000){out.push(b);b=''}}
+  if(b)out.push(b);return out;
+}
 $('#imp').onchange=async e=>{
+  let added=0;
   for(const f of e.target.files){
-    const m=f.name.match(/(\d+)/),x=f.name.split('.').pop().toLowerCase();
-    if(!m||!['txt','mp3'].includes(x))continue;
-    const blob=new Blob([await f.arrayBuffer()],{type:x==='mp3'?'audio/mpeg':'text/plain'});
-    await dbop('readwrite',s=>s.put(blob,x+':'+(+m[1])));
+    const m=f.name.match(/(\d+)/),x=f.name.includes('.')?f.name.split('.').pop().toLowerCase():(f.type==='audio/mpeg'?'mp3':'txt');
+    if(x==='mp3'&&m){
+      const bl=new Blob([await f.arrayBuffer()],{type:'audio/mpeg'});await dbop('readwrite',s=>s.put(bl,'mp3:'+(+m[1])));added++;
+    }else if(x==='txt'&&(!m||f.size>300000)){
+      const parts=splitBook(await f.text());
+      for(let i=0;i<parts.length;i++)await dbop('readwrite',s=>s.put(new Blob([parts[i]],{type:'text/plain'}),'txt:'+(i+1)));
+      added+=parts.length;
+    }else if(x==='txt'){
+      const bl=new Blob([await f.arrayBuffer()],{type:'text/plain'});await dbop('readwrite',s=>s.put(bl,'txt:'+(+m[1])));added++;
+    }
   }
+  alert(added?'已匯入 '+added+' 個章節或檔案':'沒有可匯入的檔案（支援 txt、mp3）');
   e.target.value='';await refresh();
   if(cur===null&&chs.length)go(chs.find(c=>c.n===LS.g('last',0))?LS.g('last',0):chs[0].n);
 };
