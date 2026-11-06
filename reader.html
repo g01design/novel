@@ -2,206 +2,168 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="閱讀器">
-<title>章節閱讀器1</title>
+<meta name="apple-mobile-web-app-title" content="TXT 閱讀器">
+<title>TXT 閱讀器</title>
 <style>
-:root{--bg:#f6f3ec;--fg:#2a2620;--mut:#8a8478;--bar:#ece8de;--acc:#1f6f5c;--hl:#fbe7a6;--bd:#d9d3c5;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="sepia"]){--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--hl:#4a4220;--bd:#34363a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--hl:#4a4220;--bd:#34363a;color-scheme:dark}
-:root[data-theme="sepia"]{--bg:#efe2c3;--fg:#43331c;--mut:#8c7650;--bar:#e4d4ae;--acc:#8a4b1f;--hl:#f7d98a;--bd:#d2bf92}
-html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
-body{padding-bottom:150px}body.focus{padding-bottom:40px}
-button,select{font:inherit;color:inherit;background:none;border:0;padding:8px 10px;border-radius:8px}
+:root{--bg:#f6f3ec;--fg:#2a2620;--mut:#8a8478;--bar:#ece8de;--acc:#1f6f5c;--bd:#d9d3c5;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="sepia"]){--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}
+:root[data-theme="sepia"]{--bg:#efe2c3;--fg:#43331c;--mut:#8c7650;--bar:#e4d4ae;--acc:#8a4b1f;--bd:#d2bf92}
+html,body{touch-action:pan-x pan-y;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:70px}body.focus{padding-bottom:40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:4}
+button{font:inherit;color:inherit;background:none;border:0;padding:8px 12px;border-radius:8px}
 button:active{background:var(--bd)}
-header,footer{background:var(--bar)}header{position:sticky;top:env(safe-area-inset-top,0px);z-index:3}body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:4}
-header{display:flex;align-items:center;justify-content:space-between;padding:4px 6px;border-bottom:1px solid var(--bd)}
-header b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-main{padding:0 18px}
-#txt{max-width:36em;margin:0 auto;padding:20px 0 60px;font-family:"Songti TC","Noto Serif TC",serif;line-height:1.9}
-#txt p{margin:0 0 .9em;text-align:justify;padding:2px 4px;border-radius:6px}
-#txt p.now{background:var(--hl)}
-.mut{color:var(--mut)}#txt h2{font-size:1.1em;margin:1.8em 0 .6em;color:var(--acc)}#ex{display:none}body.focus header,body.focus footer{display:none}body.focus #ex{display:block;position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:6;background:var(--bar);border:1px solid var(--bd);opacity:.8}
+header,footer{background:var(--bar)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;display:flex;align-items:center;justify-content:space-between;padding:4px 6px;border-bottom:1px solid var(--bd)}
+header b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
 footer{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--bd)}
-.row{display:flex;align-items:center;justify-content:space-between;gap:6px}
-#pl{background:var(--acc);color:var(--bg);width:56px;height:44px;border-radius:22px;font-size:20px}
-#seek{width:100%;accent-color:var(--acc);margin:4px 0}
-select{background:var(--bd)}
+.row{display:flex;justify-content:space-between}
+#tx p.hd{text-indent:0;font-weight:600;color:var(--acc);margin-top:1.6em}
+.tools input{flex:1;min-width:0;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bar);color:var(--fg)}
+#tl{overflow-y:auto;flex:1}
+#tl button{display:block;width:100%;text-align:left;border-radius:0;border-bottom:1px solid var(--bd);padding:12px 6px}
+#tl button.on{color:var(--acc);font-weight:600}
+main{padding:0 18px}
+#tx{max-width:36em;margin:0 auto;padding:20px 0 40px;font-family:"Songti TC","Noto Serif TC",serif;line-height:1.9}
+#tx p{margin:0 0 .9em;text-indent:2em;text-align:justify}
+.mut{color:var(--mut)}
+#ex{display:none}
+body.focus header,body.focus footer{display:none}
+body.focus #ex{display:block;position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:6;background:var(--bar);border:1px solid var(--bd);opacity:.8}
 aside{position:fixed;inset:0;background:var(--bg);z-index:5;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) 14px env(safe-area-inset-bottom,0px)}
 aside[hidden]{display:none}
-#list{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;align-content:start;padding:8px 0}
-#list button{background:var(--bar);border:1px solid var(--bd);text-align:left}
-#list button.on{border-color:var(--acc);color:var(--acc);font-weight:600}
-.tools{display:flex;gap:8px;padding:10px 0;flex-wrap:wrap}
-.tools label,.tools button{background:var(--acc);color:var(--bg);padding:9px 14px;border-radius:10px;cursor:pointer}
-.tools .ghost{background:var(--bd);color:var(--fg)}
+.tools{display:flex;gap:8px;padding:10px 0}
+.tools button{background:var(--acc);color:var(--bg)}
+#ls{overflow-y:auto;flex:1}
+.it{display:flex;align-items:center;border-bottom:1px solid var(--bd)}
+.it .nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
 <header>
-  <button id="bm" aria-label="章節列表">☰ 章節</button>
-  <b id="title">章節閱讀器1</b>
-  <span><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button></span>
+  <button id="op">開啟</button>
+  <b id="ti">TXT 閱讀器</b>
+  <button id="lb">書庫</button>
 </header>
-<main id="m"><div id="txt"><p class="mut">點左上角「章節」，匯入 ch01.txt、ch01.mp3 等檔案後即可閱讀或收聽。</p></div></main>
+<main><div id="tx"><p class="mut">點左上角「開啟」，選擇 txt 檔案。</p></div></main>
 <footer>
-  <input type="range" id="seek" min="0" max="1000" value="0" aria-label="播放進度">
-  <div class="row">
-    <button id="pv">⏮</button><button id="bk">−15</button>
-    <button id="pl">▶</button>
-    <button id="fw">+15</button><button id="nx">⏭</button>
-  </div>
-  <div class="row"><label>速度 <select id="rt"></select></label><label>睡眠 <select id="sl"></select></label><label>連續 <select id="cn"></select></label><button id="fc">專注</button></div>
+  <div class="row"><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button><button id="toc">目錄</button><button id="fc">專注</button></div>
 </footer>
-<aside id="dr" hidden>
-  <div class="tools">
-    <label>匯入 txt／mp3<input type="file" id="imp" multiple accept=".txt,.mp3,text/plain,audio/mpeg" hidden></label>
-    <button id="clr" class="ghost">清除全部</button>
-    <button id="cl" class="ghost">關閉</button>
-  </div>
-  <div id="list"></div>
-</aside>
 <button id="ex" aria-hidden="true">✕</button>
-<audio id="a" preload="auto"></audio>
+<input type="file" id="fi" accept=".txt,text/plain" hidden>
+<aside id="dr" hidden>
+  <div class="tools"><button id="op2">匯入 txt</button><button id="cl">關閉</button></div>
+  <div id="ls"></div>
+</aside>
+<aside id="tc" hidden>
+  <div class="tools"><input type="number" id="gn" min="1" inputmode="numeric" placeholder="第幾章"><button id="go">前往</button><button id="tcl">關閉</button></div>
+  <div id="tl"></div>
+</aside>
 <script>
-const $=s=>document.querySelector(s),a=$('#a');
+const $=s=>document.querySelector(s);
 const LS={g(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let db,chs=[],cur=null,url=null,hasA=false,gen=0,speaking=false,ti=0,timer=null,voices=[];
-let size=LS.g('size',20),theme=LS.g('theme','auto'),rate=LS.g('rate',1),cnt=LS.g('cnt',1),shown=1;
-const PS=()=>$('#txt').querySelectorAll('p[data-i]');
-const ka=new Audio();ka.loop=true;
-(function(){const sr=8000,n=sr,b=new DataView(new ArrayBuffer(44+n)),w=(o,t)=>[...t].forEach((c,i)=>b.setUint8(o+i,c.charCodeAt(0)));
-w(0,'RIFF');b.setUint32(4,36+n,true);w(8,'WAVEfmt ');b.setUint32(16,16,true);b.setUint16(20,1,true);b.setUint16(22,1,true);b.setUint32(24,sr,true);b.setUint32(28,sr,true);b.setUint16(32,1,true);b.setUint16(34,8,true);w(36,'data');b.setUint32(40,n,true);
-for(let i=0;i<n;i++)b.setUint8(44+i,128);ka.src=URL.createObjectURL(new Blob([b],{type:'audio/wav'}))})();
-const open=()=>new Promise((ok,no)=>{const r=indexedDB.open('reader',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
-const dbop=(m,f)=>new Promise((ok,no)=>{const t=db.transaction('f',m),r=f(t.objectStore('f'));t.oncomplete=()=>ok(r.result);t.onerror=()=>no(t.error)});
+const H=/^第[0-9０-９一二三四五六七八九十百千零〇两]+[章回节節]/;
+let chs=[],db,name=null,size=LS.g('size',20),theme=LS.g('theme','auto');
+const open=()=>new Promise((ok,no)=>{const r=indexedDB.open('txtreader',1);r.onupgradeneeded=()=>r.result.createObjectStore('b');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+const dbop=(m,f)=>new Promise((ok,no)=>{const t=db.transaction('b',m),r=f(t.objectStore('b'));t.oncomplete=()=>ok(r.result);t.onerror=()=>no(t.error)});
 
 function applyView(){
-  $('#txt').style.fontSize=size+'px';
+  $('#tx').style.fontSize=size+'px';
   theme==='auto'?document.documentElement.removeAttribute('data-theme'):document.documentElement.dataset.theme=theme;
   LS.s('size',size);LS.s('theme',theme);
 }
 $('#sm').onclick=()=>{size=Math.max(14,size-2);applyView()};
 $('#sp').onclick=()=>{size=Math.min(40,size+2);applyView()};
 $('#th').onclick=()=>{const o=['auto','light','sepia','dark'];theme=o[(o.indexOf(theme)+1)%4];applyView()};
-
-$('#rt').innerHTML=[.75,1,1.25,1.5,1.75,2,2.5].map(v=>`<option value="${v}">${v}x</option>`).join('');
-$('#sl').innerHTML=[[0,'關閉'],[15,'15 分鐘'],[30,'30 分鐘'],[60,'60 分鐘']].map(([v,t])=>`<option value="${v}">${t}</option>`).join('');
-$('#rt').value=rate;
-$('#cn').innerHTML=[1,3,5,10,20,50].map(v=>`<option value="${v}">${v} 章</option>`).join('');$('#cn').value=cnt;
-$('#cn').onchange=e=>{cnt=+e.target.value;LS.s('cnt',cnt);if(cur!==null)go(cur)};
 $('#fc').onclick=()=>document.body.classList.add('focus');
 $('#ex').onclick=()=>document.body.classList.remove('focus');
-function setRate(){a.defaultPlaybackRate=rate;a.playbackRate=rate}
-$('#rt').onchange=e=>{rate=+e.target.value;LS.s('rate',rate);setRate();if(speaking)speakFrom(ti)};
-$('#sl').onchange=e=>{clearTimeout(timer);const m=+e.target.value;if(m)timer=setTimeout(stop,m*60000)};
 
-async function refresh(){
-  const ks=await dbop('readonly',s=>s.getAllKeys()),m={};
-  ks.forEach(k=>{const[t,n]=k.split(':');(m[n]??={n:+n})[t]=1});
-  chs=Object.values(m).sort((x,y)=>x.n-y.n);
-  $('#list').innerHTML=chs.map(c=>`<button data-n="${c.n}" class="${c.n===cur?'on':''}">第${c.n}章 ${c.txt?'📄':''}${c.mp3?'🔊':''}</button>`).join('')||'<p class="mut">尚未匯入檔案</p>';
-}
-$('#list').onclick=e=>{const b=e.target.closest('button');if(b){$('#dr').hidden=true;go(+b.dataset.n)}};
-$('#bm').onclick=()=>$('#dr').hidden=false;
-$('#cl').onclick=()=>$('#dr').hidden=true;
-function splitBook(t){
-  const H=/^\s*第[0-9０-９一二三四五六七八九十百千零〇两]+[章回节節]/,lines=t.split(/\r?\n/),parts=[];let c=[];
-  for(const l of lines){if(H.test(l)&&l.trim().length<=40&&c.length){parts.push(c.join('\n'));c=[]}c.push(l)}
-  if(c.length)parts.push(c.join('\n'));
-  if(parts.length>1)return parts;
-  const out=[];let b='';
-  for(const l of lines){if(!l.trim())continue;b+=l+'\n';if(b.length>4000){out.push(b);b=''}}
-  if(b)out.push(b);return out;
-}
-$('#imp').onchange=async e=>{
-  let added=0;
-  for(const f of e.target.files){
-    const m=f.name.match(/(\d+)/),x=f.name.includes('.')?f.name.split('.').pop().toLowerCase():(f.type==='audio/mpeg'?'mp3':'txt');
-    if(x==='mp3'&&m){
-      const bl=new Blob([await f.arrayBuffer()],{type:'audio/mpeg'});await dbop('readwrite',s=>s.put(bl,'mp3:'+(+m[1])));added++;
-    }else if(x==='txt'&&(!m||f.size>300000)){
-      const parts=splitBook(await f.text());
-      for(let i=0;i<parts.length;i++)await dbop('readwrite',s=>s.put(new Blob([parts[i]],{type:'text/plain'}),'txt:'+(i+1)));
-      added+=parts.length;
-    }else if(x==='txt'){
-      const bl=new Blob([await f.arrayBuffer()],{type:'text/plain'});await dbop('readwrite',s=>s.put(bl,'txt:'+(+m[1])));added++;
-    }
+function decode(buf){
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){}
+  let best='',bad=1e9;
+  for(const enc of['big5','gb18030']){
+    try{const t=new TextDecoder(enc).decode(buf),n=(t.match(/\uFFFD/g)||[]).length;if(n<bad){bad=n;best=t}}catch(e){}
   }
-  alert(added?'已匯入 '+added+' 個章節或檔案':'沒有可匯入的檔案（支援 txt、mp3）');
-  e.target.value='';await refresh();
-  if(cur===null&&chs.length)go(chs.find(c=>c.n===LS.g('last',0))?LS.g('last',0):chs[0].n);
+  return best||new TextDecoder().decode(buf);
+}
+const maxScroll=()=>Math.max(1,document.documentElement.scrollHeight-innerHeight);
+
+function show(n,text){
+  name=n;LS.s('last',n);$('#ti').textContent=n;
+  const f=document.createDocumentFragment();
+  chs=[];
+  for(const l of text.split(/\r?\n/)){
+    const t=l.trim();if(!t)continue;
+    const p=document.createElement('p');p.textContent=t;
+    if(t.length<=40&&H.test(t)){p.className='hd';chs.push({t,el:p})}
+    f.appendChild(p);
+  }
+  if(chs.length<2){ // 找不到章節標題:改成每 5% 一個跳轉點
+    chs=[];const ps=[...f.children];
+    for(let i=0;i<20;i++){const el=ps[Math.floor(i*ps.length/20)];if(el)chs.push({t:'位置 '+(i*5)+'%',el})}
+  }
+  $('#tx').replaceChildren(f);
+  scrollTo(0,LS.g('pos:'+n,0)*maxScroll());setTitle();
+}
+async function openBook(n){
+  const t=await dbop('readonly',s=>s.get(n));
+  if(typeof t==='string')show(n,t);
+}
+$('#op').onclick=()=>$('#fi').click();
+$('#op2').onclick=()=>$('#fi').click();
+$('#fi').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const text=decode(await f.arrayBuffer()),n=f.name.replace(/\.txt$/i,'');
+    await dbop('readwrite',s=>s.put(text,n));
+    $('#dr').hidden=true;show(n,text);
+  }catch(err){alert('無法讀取這個檔案，請確認是 txt 文字檔。')}
+  e.target.value='';
 };
-$('#clr').onclick=async()=>{if(!confirm('確定清除所有已匯入的檔案？'))return;stop();await dbop('readwrite',s=>s.clear());cur=null;$('#txt').innerHTML='<p class="mut">已清除。</p>';await refresh()};
 
-async function go(n,auto){
-  const c=chs.find(c=>c.n===n);if(!c)return;
-  stop();ti=0;cur=n;LS.s('last',n);$('#title').textContent='第'+n+'章';
-  const box=$('#txt');box.innerHTML='';
-  let gi=0;shown=0;const at=chs.findIndex(x=>x.n===n);
-  for(let k=0;k<cnt&&chs[at+k];k++){
-    const cc=chs[at+k],h=document.createElement('h2');h.textContent='第'+cc.n+'章';box.appendChild(h);
-    const t=cc.txt?await (await dbop('readonly',s=>s.get('txt:'+cc.n))).text():'（此章沒有 txt 檔）';
-    t.split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(x=>{const p=document.createElement('p');p.textContent=x;p.dataset.i=gi++;box.appendChild(p)});
-    shown++;
+async function list(){
+  const ks=await dbop('readonly',s=>s.getAllKeys());
+  const box=$('#ls');box.replaceChildren();
+  if(!ks.length){box.innerHTML='<p class="mut">書庫是空的。</p>';return}
+  for(const k of ks){
+    const row=document.createElement('div');row.className='it';
+    const b=document.createElement('button');b.className='nm';b.textContent=k;
+    b.onclick=()=>{$('#dr').hidden=true;openBook(k)};
+    const d=document.createElement('button');d.textContent='刪除';
+    d.onclick=async()=>{if(confirm('刪除「'+k+'」？')){await dbop('readwrite',s=>s.delete(k));list()}};
+    row.append(b,d);box.appendChild(row);
   }
-  if(shown>1)$('#title').textContent='第'+n+'–'+chs[at+shown-1].n+'章';
-  if(url){URL.revokeObjectURL(url);url=null}
-  hasA=!!c.mp3;
-  if(hasA){url=URL.createObjectURL(await dbop('readonly',s=>s.get('mp3:'+n)));a.src=url;setRate()}
-  else{a.removeAttribute('src');a.load()}
-  scrollTo(0,auto?0:LS.g('pos:'+n,0));
-  if('mediaSession' in navigator)navigator.mediaSession.metadata=new MediaMetadata({title:'第'+n+'章',artist:'章節閱讀器'});
-  refresh();upd();
-  if(auto)play();
 }
-function next(d,auto){const i=chs.findIndex(c=>c.n===cur)+d;if(chs[i])go(chs[i].n,auto)}
+$('#lb').onclick=()=>{$('#dr').hidden=false;list()};
+$('#cl').onclick=()=>$('#dr').hidden=true;
 
-function play(){if(hasA)a.play().catch(()=>{});else speakFrom(ti>0?ti:firstVisible())}
-function stop(){gen++;speaking=false;speechSynthesis.cancel();a.pause();ka.pause();mark(-1);upd()}
-function toggle(){if(cur===null)return;if(hasA)a.paused?play():a.pause();else speaking?stop():play()}
-function upd(){$('#pl').textContent=(hasA?!a.paused:speaking)?'⏸':'▶'}
-function firstVisible(){const top=70;const ps=[...PS()];const i=ps.findIndex(p=>p.getBoundingClientRect().bottom>top+10);return Math.max(0,i)}
-function mark(i){document.querySelectorAll('#txt p.now').forEach(p=>p.classList.remove('now'));const p=PS()[i];if(p){p.classList.add('now');p.scrollIntoView({block:'center',behavior:'smooth'})}}
-
-function loadVoices(){voices=speechSynthesis.getVoices()}
-loadVoices();speechSynthesis.onvoiceschanged=loadVoices;
-function speakFrom(i){
-  speechSynthesis.cancel();const g=++gen;ti=i;speaking=true;upd();ka.play().catch(()=>{});
-  const step=()=>{
-    if(g!==gen)return;
-    const ps=PS();
-    if(ti>=ps.length){speaking=false;upd();next(shown,true);return}
-    mark(ti);
-    const u=new SpeechSynthesisUtterance(ps[ti].textContent);
-    u.lang='zh-TW';u.rate=rate;
-    const v=voices.find(v=>v.lang.replace('_','-')==='zh-TW');if(v)u.voice=v;
-    u.onend=()=>{if(g===gen){ti++;step()}};
-    u.onerror=()=>{if(g===gen){ti++;step()}};
-    speechSynthesis.speak(u);
-  };
-  step();
+function curCh(){let lo=0,hi=chs.length-1,r=-1;while(lo<=hi){const m=(lo+hi)>>1;if(chs[m].el.getBoundingClientRect().top<=90){r=m;lo=m+1}else hi=m-1}return r}
+function setTitle(){const i=curCh();$('#ti').textContent=i>=0&&chs[i].t.length<=20&&!chs[i].t.startsWith('位置')?chs[i].t:(name||'TXT 閱讀器')}
+function jump(i){const c=chs[i];if(!c)return;$('#tc').hidden=true;scrollTo(0,c.el.getBoundingClientRect().top+scrollY-70)}
+function renderToc(){
+  const box=$('#tl'),cur=curCh();box.replaceChildren();
+  chs.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.t;if(i===cur)b.className='on';b.onclick=()=>jump(i);box.appendChild(b)});
+  $('#gn').placeholder='第幾章（共 '+chs.length+' 章）';$('#gn').value='';
+  const on=box.querySelector('.on');if(on)on.scrollIntoView({block:'center'});
 }
-$('#txt').onclick=e=>{const p=e.target.closest('p');if(p&&p.dataset.i&&!hasA&&cur!==null)speakFrom(+p.dataset.i)};
-
-$('#pl').onclick=toggle;$('#pv').onclick=()=>next(-1,true);$('#nx').onclick=()=>next(1,true);
-$('#bk').onclick=()=>{if(hasA)a.currentTime=Math.max(0,a.currentTime-15);else speakFrom(Math.max(0,ti-3))};
-$('#fw').onclick=()=>{if(hasA)a.currentTime+=15;else speakFrom(ti+3)};
-a.onplay=a.onpause=upd;a.onended=()=>next(1,true);a.onloadedmetadata=setRate;
-a.ontimeupdate=()=>{if(a.duration)$('#seek').value=a.currentTime/a.duration*1000};
-$('#seek').oninput=e=>{if(hasA&&a.duration)a.currentTime=e.target.value/1000*a.duration};
-let st;window.onscroll=()=>{clearTimeout(st);st=setTimeout(()=>{if(cur!==null)LS.s('pos:'+cur,scrollY)},300)};
-
-if('mediaSession' in navigator){
-  const h=(k,f)=>{try{navigator.mediaSession.setActionHandler(k,f)}catch(e){}};
-  h('play',()=>hasA?a.play():play());h('pause',()=>hasA?a.pause():stop());
-  h('previoustrack',()=>next(-1,true));h('nexttrack',()=>next(1,true));
-  h('seekbackward',()=>{a.currentTime=Math.max(0,a.currentTime-15)});h('seekforward',()=>{a.currentTime+=15});
-}
+$('#toc').onclick=()=>{if(!chs.length)return;$('#tc').hidden=false;renderToc()};
+$('#tcl').onclick=()=>$('#tc').hidden=true;
+$('#go').onclick=()=>{const n=parseInt($('#gn').value,10);if(n>=1&&n<=chs.length)jump(n-1)};
+$('#gn').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
+let st,tt;
+window.onscroll=()=>{
+  clearTimeout(tt);tt=setTimeout(setTitle,120);
+  clearTimeout(st);st=setTimeout(()=>{if(name)LS.s('pos:'+name,scrollY/maxScroll())},300);
+};
+// 鎖定畫面:禁止雙指縮放(iOS 會忽略 user-scalable=no,所以另外攔截手勢)
+['gesturestart','gesturechange','gestureend'].forEach(ev=>addEventListener(ev,e=>e.preventDefault()));
 
 applyView();
-open().then(d=>{db=d;return refresh()}).then(()=>{if(chs.length)go(chs.find(c=>c.n===LS.g('last',0))?LS.g('last',0):chs[0].n)}).catch(()=>{$('#txt').innerHTML='<p class="mut">無法使用瀏覽器儲存空間，請關閉私密瀏覽後重試。</p>'});
+open().then(d=>{db=d;const l=LS.g('last',null);if(l)return openBook(l)})
+  .catch(()=>{$('#tx').innerHTML='<p class="mut">無法使用瀏覽器儲存空間，請關閉私密瀏覽後重試。</p>'});
 </script>
 </body>
 </html>
