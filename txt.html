@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="閱讀器">
-<title>閱讀器</title>
+<meta name="apple-mobile-web-app-title" content="TXT 閱讀器">
+<title>TXT 閱讀器</title>
 <style>
 :root{--bg:#f6f3ec;--fg:#2a2620;--mut:#8a8478;--bar:#ece8de;--acc:#1f6f5c;--bd:#d9d3c5;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="sepia"]){--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;colxqor-scheme:dark}
+:root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}
 :root[data-theme="sepia"]{--bg:#efe2c3;--fg:#43331c;--mut:#8c7650;--bar:#e4d4ae;--acc:#8a4b1f;--bd:#d2bf92}
 html,body{touch-action:pan-x pan-y;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
 body{padding-bottom:70px}body.focus{padding-bottom:40px}
@@ -28,7 +28,8 @@ footer{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:6px 10px calc(8p
 #tl button.on{color:var(--acc);font-weight:600}
 main{padding:0 18px}
 #tx{max-width:36em;margin:0 auto;padding:20px 0 40px;font-family:"Songti TC","Noto Serif TC",serif;line-height:1.9}
-#tx p{margin:0 0 .9em;text-indent:2em;text-align:justify}
+#tx p{margin:0 0 .9em;text-indent:2em;text-align:justify;overflow-wrap:anywhere;word-break:break-word}
+html,body{overflow-x:hidden}
 .mut{color:var(--mut)}
 #ex{display:none}
 body.focus header,body.focus footer{display:none}
