@@ -31,6 +31,7 @@ main{padding:0 18px}
 #tx p{margin:0 0 .9em;text-indent:2em;text-align:justify;overflow-wrap:anywhere;word-break:break-word}
 html,body{overflow-x:hidden;overflow-anchor:none}
 .mut{color:var(--mut)}
+#tx .nav{display:block;width:100%;margin:1.5em 0;padding:14px;border:1px solid var(--bd);background:var(--bar);color:var(--acc);font-family:-apple-system,sans-serif;font-size:16px}
 #ex{display:none}
 body.focus header,body.focus footer{display:none}
 body.focus #ex{display:block;position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:6;background:var(--bar);border:1px solid var(--bd);opacity:.8}
@@ -46,7 +47,7 @@ aside[hidden]{display:none}
 <body>
 <header>
   <button id="op">開啟</button>
-  <b id="ti">閱讀器07-2</b>
+  <b id="ti">TXT 閱讀器</b>
   <button id="lb">書庫</button>
 </header>
 <main><div id="tx"><p class="mut">點左上角「開啟」，選擇 txt 檔案。</p></div></main>
@@ -91,7 +92,7 @@ function decode(buf){
   return best||new TextDecoder().decode(buf);
 }
 let lo=0,hi=-1;
-// 把整本書拆成章節(每章只存文字,需要時才放進頁面)
+// 把整本書拆成章節(每章只存文字,一次只放 N 章進頁面)
 function show(n,text){
   name=n;LS.s('last',n);
   const L=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -117,26 +118,19 @@ function mk(i){
   c.ls.forEach((t,j)=>{const p=document.createElement('p');p.textContent=t;if(j===0&&!c.pre&&!c.auto)p.className='hd';s.appendChild(p)});
   return s;
 }
-const TOP=70;
+const TOP=70,N=10; // N = 一次載入幾章,想縮短就改這個數字
+function navBtn(txt,fn){const b=document.createElement('button');b.className='nav';b.textContent=txt;b.onclick=fn;return b}
+// 從第 i 章開始一次放 N 章;到最後有按鈕載入下一批
 function load(i,frac){
-  lo=hi=i;const s=mk(i);$('#tx').replaceChildren(s);
+  lo=i;hi=Math.min(i+N-1,chs.length-1);
+  const box=$('#tx'),f=document.createDocumentFragment();
+  if(lo>0)f.appendChild(navBtn('↑ 載入前 '+N+' 章',()=>load(Math.max(0,lo-N),0)));
+  for(let k=lo;k<=hi;k++)f.appendChild(mk(k));
+  if(hi<chs.length-1)f.appendChild(navBtn('載入下 '+N+' 章（'+chs[hi+1].t+' 起）↓',()=>load(hi+1,0)));
+  box.replaceChildren(f);
+  const s=box.querySelector('section');
   scrollTo(0,s.getBoundingClientRect().top+scrollY+frac*s.offsetHeight-TOP);
-  fill();setTitle();
-}
-// 接近底部就接上下一章、接近頂部就補上一章;離太遠的章節移掉,讓頁面保持很小
-function fill(){
-  const box=$('#tx'),H2=innerHeight,de=document.documentElement;
-  for(let k=0;k<3;k++){
-    if(hi<chs.length-1&&de.scrollHeight-(scrollY+H2)<H2*2){box.appendChild(mk(++hi));continue}
-    if(lo>0&&scrollY<H2){const b=de.scrollHeight;box.prepend(mk(--lo));scrollTo(0,scrollY+de.scrollHeight-b);continue}
-    break;
-  }
-  while(hi-lo>=4){
-    const f=box.firstElementChild,l=box.lastElementChild;
-    if(f.getBoundingClientRect().bottom<-H2){const b=de.scrollHeight;f.remove();lo++;scrollTo(0,scrollY-(b-de.scrollHeight))}
-    else if(l.getBoundingClientRect().top>H2*3){l.remove();hi--}
-    else break;
-  }
+  setTitle();
 }
 function curSec(){let r=null;for(const s of $('#tx').children){if(s.dataset.i!==undefined&&s.getBoundingClientRect().top<=TOP+20)r=s}return r||$('#tx').firstElementChild}
 async function openBook(n){
@@ -173,7 +167,7 @@ $('#cl').onclick=()=>$('#dr').hidden=true;
 
 function curCh(){const s=curSec();return s&&s.dataset.i!==undefined?+s.dataset.i:-1}
 function setTitle(){const i=curCh(),c=chs[i];$('#ti').textContent=c&&!c.auto&&!c.pre&&c.t.length<=20?c.t:(name||'TXT 閱讀器')}
-function jump(i){if(!chs[i])return;$('#tc').hidden=true;load(i,0)}
+function jump(i){if(!chs[i])return;$('#tc').hidden=true;if(i>=lo&&i<=hi){const s=$('#tx').querySelector('section[data-i="'+i+'"]');scrollTo(0,s.getBoundingClientRect().top+scrollY-TOP)}else load(i,0)}
 function renderToc(){
   const box=$('#tl'),cur=curCh();box.replaceChildren();
   chs.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.t;if(i===cur)b.className='on';b.onclick=()=>jump(i);box.appendChild(b)});
@@ -184,10 +178,9 @@ $('#toc').onclick=()=>{if(!chs.length)return;$('#tc').hidden=false;renderToc()};
 $('#tcl').onclick=()=>$('#tc').hidden=true;
 $('#go').onclick=()=>{const n=parseInt($('#gn').value,10),o=chs[0]&&chs[0].pre?1:0;if(n>=1&&n+o<=chs.length)jump(n-1+o)};
 $('#gn').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
-let st,tt,rf=0;
+let st,tt;
 function savePos(){const s=curSec();if(!name||!s||s.dataset.i===undefined)return;const r=s.getBoundingClientRect();LS.s('at:'+name,[+s.dataset.i,Math.max(0,Math.min(1,(TOP-r.top)/r.height))])}
 window.onscroll=()=>{
-  if(!rf){rf=1;requestAnimationFrame(()=>{rf=0;if(name)fill()})}
   clearTimeout(tt);tt=setTimeout(setTitle,120);
   clearTimeout(st);st=setTimeout(savePos,300);
 };
