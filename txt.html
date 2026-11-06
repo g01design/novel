@@ -29,7 +29,7 @@ footer{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:6px 10px calc(8p
 main{padding:0 18px}
 #tx{max-width:36em;margin:0 auto;padding:20px 0 40px;font-family:"Songti TC","Noto Serif TC",serif;line-height:1.9}
 #tx p{margin:0 0 .9em;text-indent:2em;text-align:justify;overflow-wrap:anywhere;word-break:break-word}
-html,body{overflow-x:hidden}
+html,body{overflow-x:hidden;overflow-anchor:none}
 .mut{color:var(--mut)}
 #ex{display:none}
 body.focus header,body.focus footer{display:none}
@@ -90,25 +90,55 @@ function decode(buf){
   }
   return best||new TextDecoder().decode(buf);
 }
-const maxScroll=()=>Math.max(1,document.documentElement.scrollHeight-innerHeight);
-
+let lo=0,hi=-1;
+// 把整本書拆成章節(每章只存文字,需要時才放進頁面)
 function show(n,text){
-  name=n;LS.s('last',n);$('#ti').textContent=n;
-  const f=document.createDocumentFragment();
-  chs=[];
-  for(const l of text.split(/\r?\n/)){
-    const t=l.trim();if(!t)continue;
-    const p=document.createElement('p');p.textContent=t;
-    if(t.length<=40&&H.test(t)){p.className='hd';chs.push({t,el:p})}
-    f.appendChild(p);
+  name=n;LS.s('last',n);
+  const L=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  chs=[];let cur=null;
+  for(const t of L){
+    if(t.length<=40&&H.test(t)){cur={t,ls:[t]};chs.push(cur)}
+    else{if(!cur){cur={t:'開頭',ls:[],pre:1};chs.push(cur)}cur.ls.push(t)}
   }
-  if(chs.length<2){ // 找不到章節標題:改成每 5% 一個跳轉點
-    chs=[];const ps=[...f.children];
-    for(let i=0;i<20;i++){const el=ps[Math.floor(i*ps.length/20)];if(el)chs.push({t:'位置 '+(i*5)+'%',el})}
+  if(chs.filter(c=>!c.pre).length<2){ // 找不到章節標題:每 150 段切一份
+    chs=[];for(let i=0;i<L.length;i+=150)chs.push({t:'位置 '+Math.round(i*100/L.length)+'%',ls:L.slice(i,i+150),auto:1});
   }
-  $('#tx').replaceChildren(f);
-  scrollTo(0,LS.g('pos:'+n,0)*maxScroll());setTitle();
+  if(!chs.length)chs=[{t:n,ls:[],auto:1}];
+  let at=LS.g('at:'+n,null);
+  if(!at){ // 舊版存的是整本百分比,換算成章節
+    const f=LS.g('pos:'+n,0),tot=L.length;let acc=0,i=0;
+    for(;i<chs.length-1;i++){if(acc+chs[i].ls.length>f*tot)break;acc+=chs[i].ls.length}
+    at=[i,chs[i].ls.length?Math.min(1,(f*tot-acc)/chs[i].ls.length):0];
+  }
+  load(Math.min(at[0],chs.length-1),at[1]||0);
 }
+function mk(i){
+  const s=document.createElement('section'),c=chs[i];s.dataset.i=i;
+  c.ls.forEach((t,j)=>{const p=document.createElement('p');p.textContent=t;if(j===0&&!c.pre&&!c.auto)p.className='hd';s.appendChild(p)});
+  return s;
+}
+const TOP=70;
+function load(i,frac){
+  lo=hi=i;const s=mk(i);$('#tx').replaceChildren(s);
+  scrollTo(0,s.getBoundingClientRect().top+scrollY+frac*s.offsetHeight-TOP);
+  fill();setTitle();
+}
+// 接近底部就接上下一章、接近頂部就補上一章;離太遠的章節移掉,讓頁面保持很小
+function fill(){
+  const box=$('#tx'),H2=innerHeight,de=document.documentElement;
+  for(let k=0;k<3;k++){
+    if(hi<chs.length-1&&de.scrollHeight-(scrollY+H2)<H2*2){box.appendChild(mk(++hi));continue}
+    if(lo>0&&scrollY<H2){const b=de.scrollHeight;box.prepend(mk(--lo));scrollTo(0,scrollY+de.scrollHeight-b);continue}
+    break;
+  }
+  while(hi-lo>=4){
+    const f=box.firstElementChild,l=box.lastElementChild;
+    if(f.getBoundingClientRect().bottom<-H2){const b=de.scrollHeight;f.remove();lo++;scrollTo(0,scrollY-(b-de.scrollHeight))}
+    else if(l.getBoundingClientRect().top>H2*3){l.remove();hi--}
+    else break;
+  }
+}
+function curSec(){let r=null;for(const s of $('#tx').children){if(s.dataset.i!==undefined&&s.getBoundingClientRect().top<=TOP+20)r=s}return r||$('#tx').firstElementChild}
 async function openBook(n){
   const t=await dbop('readonly',s=>s.get(n));
   if(typeof t==='string')show(n,t);
@@ -134,31 +164,35 @@ async function list(){
     const b=document.createElement('button');b.className='nm';b.textContent=k;
     b.onclick=()=>{$('#dr').hidden=true;openBook(k)};
     const d=document.createElement('button');d.textContent='刪除';
-    d.onclick=async()=>{if(confirm('刪除「'+k+'」？')){await dbop('readwrite',s=>s.delete(k));list()}};
+    d.onclick=async()=>{if(confirm('刪除「'+k+'」？')){await dbop('readwrite',s=>s.delete(k));try{localStorage.removeItem('at:'+k);localStorage.removeItem('pos:'+k)}catch(e){}list()}};
     row.append(b,d);box.appendChild(row);
   }
 }
 $('#lb').onclick=()=>{$('#dr').hidden=false;list()};
 $('#cl').onclick=()=>$('#dr').hidden=true;
 
-function curCh(){let lo=0,hi=chs.length-1,r=-1;while(lo<=hi){const m=(lo+hi)>>1;if(chs[m].el.getBoundingClientRect().top<=90){r=m;lo=m+1}else hi=m-1}return r}
-function setTitle(){const i=curCh();$('#ti').textContent=i>=0&&chs[i].t.length<=20&&!chs[i].t.startsWith('位置')?chs[i].t:(name||'TXT 閱讀器')}
-function jump(i){const c=chs[i];if(!c)return;$('#tc').hidden=true;scrollTo(0,c.el.getBoundingClientRect().top+scrollY-70)}
+function curCh(){const s=curSec();return s&&s.dataset.i!==undefined?+s.dataset.i:-1}
+function setTitle(){const i=curCh(),c=chs[i];$('#ti').textContent=c&&!c.auto&&!c.pre&&c.t.length<=20?c.t:(name||'TXT 閱讀器')}
+function jump(i){if(!chs[i])return;$('#tc').hidden=true;load(i,0)}
 function renderToc(){
   const box=$('#tl'),cur=curCh();box.replaceChildren();
   chs.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.t;if(i===cur)b.className='on';b.onclick=()=>jump(i);box.appendChild(b)});
-  $('#gn').placeholder='第幾章（共 '+chs.length+' 章）';$('#gn').value='';
+  $('#gn').placeholder='第幾章（共 '+chs.filter(c=>!c.pre).length+' 章）';$('#gn').value='';
   const on=box.querySelector('.on');if(on)on.scrollIntoView({block:'center'});
 }
 $('#toc').onclick=()=>{if(!chs.length)return;$('#tc').hidden=false;renderToc()};
 $('#tcl').onclick=()=>$('#tc').hidden=true;
-$('#go').onclick=()=>{const n=parseInt($('#gn').value,10);if(n>=1&&n<=chs.length)jump(n-1)};
+$('#go').onclick=()=>{const n=parseInt($('#gn').value,10),o=chs[0]&&chs[0].pre?1:0;if(n>=1&&n+o<=chs.length)jump(n-1+o)};
 $('#gn').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
-let st,tt;
+let st,tt,rf=0;
+function savePos(){const s=curSec();if(!name||!s||s.dataset.i===undefined)return;const r=s.getBoundingClientRect();LS.s('at:'+name,[+s.dataset.i,Math.max(0,Math.min(1,(TOP-r.top)/r.height))])}
 window.onscroll=()=>{
+  if(!rf){rf=1;requestAnimationFrame(()=>{rf=0;if(name)fill()})}
   clearTimeout(tt);tt=setTimeout(setTitle,120);
-  clearTimeout(st);st=setTimeout(()=>{if(name)LS.s('pos:'+name,scrollY/maxScroll())},300);
+  clearTimeout(st);st=setTimeout(savePos,300);
 };
+addEventListener('pagehide',savePos);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)savePos()});
 // 鎖定畫面:禁止雙指縮放(iOS 會忽略 user-scalable=no,所以另外攔截手勢)
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>addEventListener(ev,e=>e.preventDefault()));
 
