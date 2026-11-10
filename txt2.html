@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TXT 閱讀器">
-<title>TXT 閱讀器</title>
+<meta name="apple-mobile-web-app-title" content="閱讀器">
+<title>閱讀器</title>
 <style>
-:root{--bg:#f6f3ec;--fg:#2a2620;--mut:#8a8478;--bar:#ece8de;--acc:#1f6f5c;--bd:#d9d3c5;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="sepia"]){--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;color-scheme:dark}
-:root[data-theme="sepia"]{--bg:#efe2c3;--fg:#43331c;--mut:#8c7650;--bar:#e4d4ae;--acc:#8a4b1f;--bd:#d2bf92}
+:root{--bg:#f6f3ec;--fg:#2a2620;--mut:#8a8478;--bar:#ece8de;--acc:#1f6f5c;--bd:#d9d3c5;--hl:#f3d98b;--hl2:#ebe5d6;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="sepia"]){--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;--hl:#4a4126;--hl2:#202225;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181a;--fg:#d8d4ca;--mut:#7d7a72;--bar:#202225;--acc:#6cc3a8;--bd:#34363a;--hl:#4a4126;--hl2:#202225;color-scheme:dark}
+:root[data-theme="sepia"]{--bg:#efe2c3;--fg:#43331c;--mut:#8c7650;--bar:#e4d4ae;--acc:#8a4b1f;--bd:#d2bf92;--hl:#e9c46a;--hl2:#e6d6b0}
 html,body{touch-action:pan-x pan-y;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
 body{padding-bottom:70px}body.focus{padding-bottom:40px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:4}
@@ -21,6 +21,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;display:flex;a
 header b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
 footer{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:6px 10px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--bd)}
 .row{display:flex;justify-content:space-between}
+.row button{padding:8px 6px}
 #tx p.hd{text-indent:0;font-weight:600;color:var(--acc);margin-top:1.6em}
 .tools input{flex:1;min-width:0;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bar);color:var(--fg)}
 #tl{overflow-y:auto;flex:1}
@@ -28,8 +29,10 @@ footer{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:6px 10px calc(8p
 #tl button.on{color:var(--acc);font-weight:600}
 main{padding:0 18px}
 #tx{max-width:36em;margin:0 auto;padding:20px 0 40px;font-family:"Songti TC","Noto Serif TC",serif;line-height:1.9}
-#tx p{margin:0 0 .9em;text-indent:2em;text-align:justify}
+#tx p{margin:0 0 .9em;text-indent:2em;text-align:justify;overflow-wrap:anywhere;word-break:break-word}
+main{overflow-x:hidden;overflow-x:clip}
 .mut{color:var(--mut)}
+#tx .nav{display:block;width:100%;margin:1.5em 0;padding:14px;border:1px solid var(--bd);background:var(--bar);color:var(--acc);font-family:-apple-system,sans-serif;font-size:16px}
 #ex{display:none}
 body.focus header,body.focus footer{display:none}
 body.focus #ex{display:block;position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:6;background:var(--bar);border:1px solid var(--bd);opacity:.8}
@@ -40,6 +43,21 @@ aside[hidden]{display:none}
 #ls{overflow-y:auto;flex:1}
 .it{display:flex;align-items:center;border-bottom:1px solid var(--bd)}
 .it .nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 朗讀 */
+::highlight(rd){background-color:var(--hl)}
+#tx p.rd{background:var(--hl2);border-radius:4px}
+#rb{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;align-items:center;gap:4px;padding:6px 10px;background:var(--bar);border-top:1px solid var(--bd);font-size:15px}
+#rb[hidden]{display:none}
+body.focus #rb{bottom:env(safe-area-inset-bottom,0px)}
+#rb button{padding:8px 8px}
+#rb #rp{color:var(--acc);font-weight:600;min-width:3.2em}
+#rb select{flex:1;min-width:0;font:inherit;font-size:14px;padding:6px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)}
+#rm{position:fixed;left:10px;right:10px;bottom:calc(120px + env(safe-area-inset-bottom,0px));z-index:4;background:var(--bar);border:1px solid var(--acc);border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.6}
+#rm[hidden]{display:none}
+#rm button{color:var(--acc);padding:4px 8px}
+#rr{min-width:2.6em;text-align:center;color:var(--mut)}
+body.reading{padding-bottom:130px}
 </style>
 </head>
 <body>
@@ -50,8 +68,10 @@ aside[hidden]{display:none}
 </header>
 <main><div id="tx"><p class="mut">點左上角「開啟」，選擇 txt 檔案。</p></div></main>
 <footer>
-  <div class="row"><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button><button id="toc">目錄</button><button id="fc">專注</button></div>
+  <div class="row"><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button><button id="toc">目錄</button><button id="rd">朗讀</button><button id="bt">底部</button><button id="fc">專注</button></div>
 </footer>
+<div id="rm" hidden>沒有聽到聲音？請確認：① 左側靜音開關沒有開（或控制中心的靜音）② 音量已調大 ③ 換一個聲音試試。然後按「▶ 繼續」。<button id="rmx">知道了</button></div>
+<div id="rb" hidden><button id="rp">⏸ 暫停</button><button id="rs">−</button><span id="rr">1.0</span><button id="rf">＋</button><select id="rv" aria-label="聲音"></select><button id="rx">■ 停止</button></div>
 <button id="ex" aria-hidden="true">✕</button>
 <input type="file" id="fi" accept=".txt,text/plain" hidden>
 <aside id="dr" hidden>
@@ -78,6 +98,7 @@ function applyView(){
 $('#sm').onclick=()=>{size=Math.max(14,size-2);applyView()};
 $('#sp').onclick=()=>{size=Math.min(40,size+2);applyView()};
 $('#th').onclick=()=>{const o=['auto','light','sepia','dark'];theme=o[(o.indexOf(theme)+1)%4];applyView()};
+$('#bt').onclick=()=>scrollTo(0,document.documentElement.scrollHeight);
 $('#fc').onclick=()=>document.body.classList.add('focus');
 $('#ex').onclick=()=>document.body.classList.remove('focus');
 
@@ -89,25 +110,49 @@ function decode(buf){
   }
   return best||new TextDecoder().decode(buf);
 }
-const maxScroll=()=>Math.max(1,document.documentElement.scrollHeight-innerHeight);
-
+let lo=0,hi=-1;
+// 把整本書拆成章節(每章只存文字,一次只放 N 章進頁面)
 function show(n,text){
-  name=n;LS.s('last',n);$('#ti').textContent=n;
-  const f=document.createDocumentFragment();
-  chs=[];
-  for(const l of text.split(/\r?\n/)){
-    const t=l.trim();if(!t)continue;
-    const p=document.createElement('p');p.textContent=t;
-    if(t.length<=40&&H.test(t)){p.className='hd';chs.push({t,el:p})}
-    f.appendChild(p);
+  name=n;LS.s('last',n);
+  const L=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  chs=[];let cur=null;
+  for(const t of L){
+    if(t.length<=40&&H.test(t)){cur={t,ls:[t]};chs.push(cur)}
+    else{if(!cur){cur={t:'開頭',ls:[],pre:1};chs.push(cur)}cur.ls.push(t)}
   }
-  if(chs.length<2){ // 找不到章節標題:改成每 5% 一個跳轉點
-    chs=[];const ps=[...f.children];
-    for(let i=0;i<20;i++){const el=ps[Math.floor(i*ps.length/20)];if(el)chs.push({t:'位置 '+(i*5)+'%',el})}
+  if(chs.filter(c=>!c.pre).length<2){ // 找不到章節標題:每 150 段切一份
+    chs=[];for(let i=0;i<L.length;i+=150)chs.push({t:'位置 '+Math.round(i*100/L.length)+'%',ls:L.slice(i,i+150),auto:1});
   }
-  $('#tx').replaceChildren(f);
-  scrollTo(0,LS.g('pos:'+n,0)*maxScroll());setTitle();
+  if(!chs.length)chs=[{t:n,ls:[],auto:1}];
+  let at=LS.g('at:'+n,null);
+  if(!at){ // 舊版存的是整本百分比,換算成章節
+    const f=LS.g('pos:'+n,0),tot=L.length;let acc=0,i=0;
+    for(;i<chs.length-1;i++){if(acc+chs[i].ls.length>f*tot)break;acc+=chs[i].ls.length}
+    at=[i,chs[i].ls.length?Math.min(1,(f*tot-acc)/chs[i].ls.length):0];
+  }
+  load(Math.min(at[0],chs.length-1),at[1]||0);
 }
+function mk(i){
+  const s=document.createElement('section'),c=chs[i];s.dataset.i=i;
+  c.ls.forEach((t,j)=>{const p=document.createElement('p');p.textContent=t;if(j===0&&!c.pre&&!c.auto)p.className='hd';s.appendChild(p)});
+  return s;
+}
+const TOP=70,N=10; // N = 一次載入幾章,想縮短就改這個數字
+function navBtn(txt,fn){const b=document.createElement('button');b.className='nav';b.textContent=txt;b.onclick=fn;return b}
+// 從第 i 章開始一次放 N 章;到最後有按鈕載入下一批
+function load(i,frac){
+  lo=i;hi=Math.min(i+N-1,chs.length-1);
+  const box=$('#tx'),f=document.createDocumentFragment();
+  if(lo>0)f.appendChild(navBtn('↑ 載入前 '+N+' 章',()=>load(Math.max(0,lo-N),0)));
+  for(let k=lo;k<=hi;k++)f.appendChild(mk(k));
+  if(hi<chs.length-1)f.appendChild(navBtn('載入下 '+N+' 章（'+chs[hi+1].t+' 起）↓',()=>load(hi+1,0)));
+  box.replaceChildren(f);
+  if(typeof R!=='undefined'&&R.on&&R.p&&!R.p.isConnected&&!loading)stopRead();
+  const s=box.querySelector('section');
+  scrollTo(0,s.getBoundingClientRect().top+scrollY+frac*s.offsetHeight-TOP);
+  setTitle();
+}
+function curSec(){let r=null;for(const s of $('#tx').children){if(s.dataset.i!==undefined&&s.getBoundingClientRect().top<=TOP+20)r=s}return r||$('#tx').firstElementChild}
 async function openBook(n){
   const t=await dbop('readonly',s=>s.get(n));
   if(typeof t==='string')show(n,t);
@@ -133,33 +178,180 @@ async function list(){
     const b=document.createElement('button');b.className='nm';b.textContent=k;
     b.onclick=()=>{$('#dr').hidden=true;openBook(k)};
     const d=document.createElement('button');d.textContent='刪除';
-    d.onclick=async()=>{if(confirm('刪除「'+k+'」？')){await dbop('readwrite',s=>s.delete(k));list()}};
+    d.onclick=async()=>{if(confirm('刪除「'+k+'」？')){await dbop('readwrite',s=>s.delete(k));try{localStorage.removeItem('at:'+k);localStorage.removeItem('pos:'+k)}catch(e){}list()}};
     row.append(b,d);box.appendChild(row);
   }
 }
 $('#lb').onclick=()=>{$('#dr').hidden=false;list()};
 $('#cl').onclick=()=>$('#dr').hidden=true;
 
-function curCh(){let lo=0,hi=chs.length-1,r=-1;while(lo<=hi){const m=(lo+hi)>>1;if(chs[m].el.getBoundingClientRect().top<=90){r=m;lo=m+1}else hi=m-1}return r}
-function setTitle(){const i=curCh();$('#ti').textContent=i>=0&&chs[i].t.length<=20&&!chs[i].t.startsWith('位置')?chs[i].t:(name||'TXT 閱讀器')}
-function jump(i){const c=chs[i];if(!c)return;$('#tc').hidden=true;scrollTo(0,c.el.getBoundingClientRect().top+scrollY-70)}
+function curCh(){const s=curSec();return s&&s.dataset.i!==undefined?+s.dataset.i:-1}
+function setTitle(){const i=curCh(),c=chs[i];$('#ti').textContent=c&&!c.auto&&!c.pre&&c.t.length<=20?c.t:(name||'TXT 閱讀器')}
+function jump(i){if(!chs[i])return;$('#tc').hidden=true;if(i>=lo&&i<=hi){const s=$('#tx').querySelector('section[data-i="'+i+'"]');scrollTo(0,s.getBoundingClientRect().top+scrollY-TOP)}else load(i,0)}
 function renderToc(){
   const box=$('#tl'),cur=curCh();box.replaceChildren();
   chs.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.t;if(i===cur)b.className='on';b.onclick=()=>jump(i);box.appendChild(b)});
-  $('#gn').placeholder='第幾章（共 '+chs.length+' 章）';$('#gn').value='';
+  $('#gn').placeholder='第幾章（共 '+chs.filter(c=>!c.pre).length+' 章）';$('#gn').value='';
   const on=box.querySelector('.on');if(on)on.scrollIntoView({block:'center'});
 }
 $('#toc').onclick=()=>{if(!chs.length)return;$('#tc').hidden=false;renderToc()};
 $('#tcl').onclick=()=>$('#tc').hidden=true;
-$('#go').onclick=()=>{const n=parseInt($('#gn').value,10);if(n>=1&&n<=chs.length)jump(n-1)};
+$('#go').onclick=()=>{const n=parseInt($('#gn').value,10),o=chs[0]&&chs[0].pre?1:0;if(n>=1&&n+o<=chs.length)jump(n-1+o)};
 $('#gn').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
 let st,tt;
+function savePos(){const s=curSec();if(!name||!s||s.dataset.i===undefined)return;const r=s.getBoundingClientRect();LS.s('at:'+name,[+s.dataset.i,Math.max(0,Math.min(1,(TOP-r.top)/r.height))])}
 window.onscroll=()=>{
   clearTimeout(tt);tt=setTimeout(setTitle,120);
-  clearTimeout(st);st=setTimeout(()=>{if(name)LS.s('pos:'+name,scrollY/maxScroll())},300);
+  clearTimeout(st);st=setTimeout(savePos,300);
 };
+addEventListener('pagehide',savePos);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)savePos()});
 // 鎖定畫面:禁止雙指縮放(iOS 會忽略 user-scalable=no,所以另外攔截手勢)
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>addEventListener(ev,e=>e.preventDefault()));
+
+// ===== 朗讀:用網頁語音一句一句念,反白與捲動由閱讀器自己控制 =====
+const SS=window.speechSynthesis;
+const R={on:false,paused:false,p:null,parts:[],k:0,gen:0,wd:0,lock:null};
+let rate=LS.g('rate',1),voices=[];
+function splitSent(t){
+  const out=[];const re=/[^。！？!?；;…]+[。！？!?；;…]*[」』”"’）)]*/g;let m;
+  while((m=re.exec(t))){
+    let a=m.index,str=m[0];
+    while(str.length>120){ // 太長的句子在逗號切開
+      let c=-1;for(const ch of'，,、：:'){const i=str.lastIndexOf(ch,110);if(i>c)c=i}
+      if(c<20)c=100;out.push([a,a+c+1]);a+=c+1;str=str.slice(c+1);
+    }
+    if(str.trim())out.push([a,a+str.length]);
+  }
+  return out.length?out:[[0,t.length]];
+}
+function loadVoices(){
+  voices=SS?SS.getVoices().filter(v=>/^(zh|cmn|yue)/i.test(v.lang)):[];
+  const sel=$('#rv'),want=LS.g('voice',null);sel.replaceChildren();
+  const def=document.createElement('option');def.value='';def.textContent='預設中文聲音';sel.appendChild(def);
+  voices.forEach(v=>{const o=document.createElement('option');o.value=v.voiceURI;o.textContent=v.name+'（'+v.lang+'）';sel.appendChild(o)});
+  sel.value=voices.some(v=>v.voiceURI===want)?want:'';
+}
+if(SS){loadVoices();SS.addEventListener?SS.addEventListener('voiceschanged',loadVoices):(SS.onvoiceschanged=loadVoices)}
+$('#rv').onchange=()=>{LS.s('voice',$('#rv').value);if(R.on&&!R.paused)speakCur()};
+function showRate(){$('#rr').textContent=rate.toFixed(1)}
+$('#rs').onclick=()=>{rate=Math.max(.5,Math.round((rate-.1)*10)/10);LS.s('rate',rate);showRate();if(R.on&&!R.paused)speakCur()};
+$('#rf').onclick=()=>{rate=Math.min(2.5,Math.round((rate+.1)*10)/10);LS.s('rate',rate);showRate();if(R.on&&!R.paused)speakCur()};
+showRate();
+const readable=p=>p&&p.tagName==='P'&&p.closest('#tx section')&&p.textContent.trim();
+function nextP(p){
+  let el=p;
+  while(true){
+    el=el.nextElementSibling||(el.parentElement.nextElementSibling&&el.parentElement.nextElementSibling.tagName==='SECTION'?el.parentElement.nextElementSibling.firstElementChild:null);
+    if(!el)return null;if(readable(el))return el;
+  }
+}
+function firstVisibleP(){
+  for(const p of $('#tx').querySelectorAll('section p')){if(p.getBoundingClientRect().bottom>TOP+10)return p}
+  return $('#tx').querySelector('section p');
+}
+function mark(){
+  document.querySelectorAll('#tx p.rd').forEach(x=>x.classList.remove('rd'));
+  if(window.CSS&&CSS.highlights)CSS.highlights.delete('rd');
+  if(!R.on||!R.p)return;
+  R.p.classList.add('rd');
+  const [a,b]=R.parts[R.k],node=R.p.firstChild;let rect=R.p.getBoundingClientRect();
+  if(node){try{const rg=document.createRange();rg.setStart(node,a);rg.setEnd(node,b);
+    if(window.CSS&&CSS.highlights&&window.Highlight)CSS.highlights.set('rd',new Highlight(rg));
+    const rs=rg.getClientRects();if(rs.length)rect={top:rs[0].top,bottom:rs[rs.length-1].bottom}}catch(e){}}
+  // 句子不在舒適範圍就捲動,讓它在畫面約三分之一處
+  const bottomLimit=innerHeight-(document.body.classList.contains('focus')?70:140);
+  if(rect.top<TOP+10||rect.bottom>bottomLimit)scrollTo(0,scrollY+rect.top-innerHeight*0.3);
+}
+function setP(p){R.p=p;R.parts=splitSent(p.textContent);R.k=0}
+let bad=0; // 連續「沒聲音就結束」的次數
+function speakCur(){
+  if(!SS)return;
+  const g=++R.gen;clearTimeout(R.wd);
+  // iOS bug:cancel() 之後立刻 speak(),新的句子常會被吞掉、沒有聲音。
+  // 所以只有真的在念時才 cancel,而且 cancel 後稍等一下再念。
+  const busy=SS.speaking||SS.pending;
+  if(busy)SS.cancel();
+  if(!R.on||R.paused||!R.p)return;
+  mark();
+  if(busy){R.wd=setTimeout(()=>{if(g===R.gen)say(g)},250)}else say(g);
+}
+function say(g){
+  const [a,b]=R.parts[R.k],txt=R.p.textContent.slice(a,b);
+  const u=new SpeechSynthesisUtterance(txt);
+  const v=voices.find(v=>v.voiceURI===$('#rv').value);
+  if(v){u.voice=v;u.lang=v.lang}else u.lang='zh-TW';
+  u.rate=rate;u.volume=1;
+  let started=false,t0=Date.now();
+  const done=()=>{
+    if(g!==R.gen)return;
+    // 念很長的句子卻瞬間結束 → 其實沒有聲音
+    if(txt.replace(/[\s\p{P}]/gu,'').length>3&&Date.now()-t0<300){if(++bad>=3){noSound();return}}else bad=0;
+    advance();
+  };
+  u.onstart=()=>{started=true;t0=Date.now()};
+  u.onend=done;
+  // 我們自己取消時 gen 已經變了;gen 沒變卻被中斷 = 外部(LINE 通知等)打斷 → 稍後重念這句
+  u.onerror=e=>{if(g!==R.gen)return;if(e.error==='interrupted'||e.error==='canceled'){R.wd=setTimeout(()=>{if(g===R.gen&&R.on&&!R.paused)speakCur()},800);return}done()};
+  SS.speak(u);
+  // 看門狗:iOS 有時不回報「念完」,或根本沒開始
+  const est=(txt.length*0.32/rate+4)*1000;let retry=0;
+  const check=()=>{
+    if(g!==R.gen||!R.on||R.paused)return;
+    if(!started&&!SS.speaking){if(++retry>2){noSound();return}SS.cancel();setTimeout(()=>{if(g===R.gen){SS.speak(u);R.wd=setTimeout(check,3000)}},250);return}
+    if(!SS.speaking){ // 停了卻沒回報:太早停 = 被打斷,重念;否則往下
+      if(Date.now()-t0<txt.length*150/rate&&retry++<2){speakCur();return}
+      advance();return}
+    if(Date.now()-t0>est*2){advance();return}
+    R.wd=setTimeout(check,1500);
+  };
+  R.wd=setTimeout(check,3000);
+}
+function noSound(){
+  pauseRead();bad=0;
+  $('#rm').hidden=false;
+}
+let loading=false;
+function advance(){
+  if(!R.on)return;
+  if(R.k<R.parts.length-1){R.k++;speakCur();return}
+  let n=nextP(R.p);
+  if(!n&&hi<chs.length-1){loading=true;load(hi+1,0);loading=false;n=$('#tx').querySelector('section p')} // 自動載入下一批
+  if(!n){stopRead();return}
+  setP(n);speakCur();
+}
+async function wake(on){
+  try{
+    if(on&&!R.lock&&navigator.wakeLock){R.lock=await navigator.wakeLock.request('screen');R.lock.addEventListener('release',()=>{R.lock=null})}
+    if(!on&&R.lock){await R.lock.release();R.lock=null}
+  }catch(e){}
+}
+function ui(){
+  $('#rb').hidden=!R.on;document.body.classList.toggle('reading',R.on);
+  $('#rd').style.color=R.on?'var(--acc)':'';
+  $('#rp').textContent=R.paused?'▶ 繼續':'⏸ 暫停';
+}
+function audioOn(){$('#rm').hidden=true;try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}}
+function startRead(p){
+  if(!SS){alert('這個瀏覽器不支援朗讀。');return}
+  if(!p)return;
+  audioOn();R.on=true;R.paused=false;setP(p);ui();wake(true);speakCur();
+}
+function stopRead(){
+  R.on=false;R.paused=false;R.gen++;clearTimeout(R.wd);
+  try{SS&&SS.cancel()}catch(e){}
+  mark();R.p=null;ui();wake(false);
+}
+function pauseRead(){if(!R.on)return;R.paused=true;R.gen++;clearTimeout(R.wd);try{SS.cancel()}catch(e){}ui();wake(false)}
+function resumeRead(){if(!R.on)return;audioOn();R.paused=false;ui();wake(true);speakCur()} // 從這句開頭重念
+$('#rd').onclick=()=>{if(R.on){R.paused?resumeRead():pauseRead();return}startRead(firstVisibleP())};
+$('#rp').onclick=()=>R.paused?resumeRead():pauseRead();
+$('#rx').onclick=()=>{$('#rm').hidden=true;stopRead()};
+$('#rmx').onclick=()=>$('#rm').hidden=true;
+// 朗讀中點任一段落:從那段開始念
+$('#tx').addEventListener('click',e=>{const p=e.target.closest('p');if(R.on&&readable(p)){setP(p);R.paused=false;ui();wake(true);speakCur()}});
+// 切到背景或鎖螢幕時 iOS 會中斷語音:改成暫停,回來按繼續
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&R.on&&!R.paused)pauseRead()});
 
 applyView();
 open().then(d=>{db=d;const l=LS.g('last',null);if(l)return openBook(l)})
