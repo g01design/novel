@@ -39,7 +39,6 @@ main{padding:0 18px}
 #tx p{margin:0 0 .9em;text-indent:2em;text-align:justify;overflow-wrap:anywhere;word-break:break-word}
 html,body{overflow-x:hidden;overflow-anchor:none}
 .mut{color:var(--mut)}
-#tx .nav{display:block;width:100%;margin:1.5em 0;padding:14px;border:1px solid var(--bd);background:var(--bar);color:var(--acc);font-family:-apple-system,sans-serif;font-size:16px}
 #ex{display:none}
 body.focus header,body.focus footer{display:none}
 body.focus #ex{display:block;position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:6;background:var(--bar);border:1px solid var(--bd);opacity:.8}
@@ -60,7 +59,7 @@ aside[hidden]{display:none}
 </header>
 <main><div id="tx"><p class="mut">點左上角「開啟」，選擇 txt 檔案。</p></div></main>
 <footer>
-  <div class="row"><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button><button id="toc">目錄</button><button id="bt">底部</button><button id="fc">專注</button></div>
+  <div class="row"><button id="sm">A−</button><button id="sp">A＋</button><button id="th">主題</button><button id="toc">目錄</button><button id="bt">底部</button><button id="fc">專注</button><button id="ls2">從此聽</button></div>
 </footer>
 <button id="ex" aria-hidden="true">✕</button>
 <input type="file" id="fi" accept=".txt,text/plain" hidden>
@@ -100,10 +99,9 @@ function decode(buf){
   }
   return best||new TextDecoder().decode(buf);
 }
-let lo=0,hi=-1;
-// 把整本書拆成章節(每章只存文字,一次只放 N 章進頁面)
+// 把整本書拆成章節
 function show(n,text){
-  name=n;LS.s('last',n);
+  name=n;LS.s('last',n);from=0;
   const L=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   chs=[];let cur=null;
   for(const t of L){
@@ -127,36 +125,19 @@ function mk(i){
   c.ls.forEach((t,j)=>{const p=document.createElement('p');p.textContent=t;if(j===0&&!c.pre&&!c.auto)p.className='hd';s.appendChild(p)});
   return s;
 }
-const TOP=70,N=10; // N = 一次載入幾章,想縮短就改這個數字
-function navBtn(txt,fn){const b=document.createElement('button');b.className='nav';b.textContent=txt;b.onclick=fn;return b}
-// 從第 i 章開始一次放 N 章;到最後有按鈕載入下一批
+const TOP=70;
+let from=0; // 從第幾章開始放進頁面(「從此聽」模式用)
+// 一次把整本書全部放進頁面,再捲到第 i 章的 frac 位置
 function load(i,frac){
-  lo=i;hi=Math.min(i+N-1,chs.length-1);
   const box=$('#tx'),f=document.createDocumentFragment();
-  if(lo>0)f.appendChild(prevBtn());
-  for(let k=lo;k<=hi;k++)f.appendChild(mk(k));
-  if(hi<chs.length-1)f.appendChild(nextBtn());
+  if(i<from)from=0;
+  for(let k=from;k<chs.length;k++)f.appendChild(mk(k));
+  $('#ls2').textContent=from?'全書':'從此聽';
   box.replaceChildren(f);
-  const s=box.querySelector('section');
+  const s=box.querySelector('section[data-i="'+i+'"]')||box.firstElementChild;
   scrollTo(0,s.getBoundingClientRect().top+scrollY+frac*s.offsetHeight-TOP);
   setTitle();
 }
-function nextBtn(){const b=navBtn('載入下 '+N+' 章（'+chs[hi+1].t+' 起）↓',more);b.id='nx';return b}
-function prevBtn(){const b=navBtn('↑ 載入前 '+N+' 章',()=>load(Math.max(0,lo-N),0));b.id='pv';return b}
-// 自動載入:快讀到底時,把下 N 章接在後面(不跳頁),並移除最前面的舊章節,畫面位置保持不動
-function more(){
-  if(hi>=chs.length-1)return;
-  const box=$('#tx'),anc=box.querySelector('section[data-i="'+hi+'"]'),top0=anc.getBoundingClientRect().top;
-  const nx=$('#nx');if(nx)nx.remove();
-  const f=document.createDocumentFragment(),end=Math.min(hi+N,chs.length-1);
-  for(let k=hi+1;k<=end;k++)f.appendChild(mk(k));
-  hi=end;if(hi<chs.length-1)f.appendChild(nextBtn());
-  box.appendChild(f);
-  while(hi-lo+1>2*N){const s=box.querySelector('section[data-i="'+lo+'"]');if(s)s.remove();lo++}
-  const pv=$('#pv');if(pv)pv.remove();if(lo>0)box.prepend(prevBtn());
-  scrollBy(0,anc.getBoundingClientRect().top-top0);
-}
-function autoMore(){if(name&&scrollY+innerHeight>document.documentElement.scrollHeight-innerHeight*2)more()}
 function curSec(){let r=null;for(const s of $('#tx').children){if(s.dataset.i!==undefined&&s.getBoundingClientRect().top<=TOP+20)r=s}return r||$('#tx').firstElementChild}
 async function openBook(n){
   const t=await dbop('readonly',s=>s.get(n));
@@ -192,7 +173,7 @@ $('#cl').onclick=()=>$('#dr').hidden=true;
 
 function curCh(){const s=curSec();return s&&s.dataset.i!==undefined?+s.dataset.i:-1}
 function setTitle(){const i=curCh(),c=chs[i];$('#ti').textContent=c&&!c.auto&&!c.pre&&c.t.length<=20?c.t:(name||'TXT 閱讀器')}
-function jump(i){if(!chs[i])return;$('#tc').hidden=true;if(i>=lo&&i<=hi){const s=$('#tx').querySelector('section[data-i="'+i+'"]');scrollTo(0,s.getBoundingClientRect().top+scrollY-TOP)}else load(i,0)}
+function jump(i){if(!chs[i])return;$('#tc').hidden=true;if(i<from)return load(i,0);const s=$('#tx').querySelector('section[data-i="'+i+'"]');scrollTo(0,s.getBoundingClientRect().top+scrollY-TOP)}
 function renderToc(){
   const box=$('#tl'),cur=curCh();box.replaceChildren();
   chs.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.t;if(i===cur)b.className='on';b.onclick=()=>jump(i);box.appendChild(b)});
@@ -200,6 +181,12 @@ function renderToc(){
   const on=box.querySelector('.on');if(on)on.scrollIntoView({block:'center'});
 }
 $('#toc').onclick=()=>{if(!chs.length)return;$('#tc').hidden=false;renderToc()};
+// 從此聽:頁面只留目前這章到最後,讓 Safari「聆聽頁面」從這裡開始念;再按一次恢復全書
+$('#ls2').onclick=()=>{
+  if(!chs.length)return;
+  if(from){const s=curSec(),r=s.getBoundingClientRect(),i=+s.dataset.i;from=0;load(i,Math.max(0,Math.min(1,(TOP-r.top)/r.height)))}
+  else{from=Math.max(0,curCh());load(from,0)}
+};
 $('#tcl').onclick=()=>$('#tc').hidden=true;
 $('#go').onclick=()=>{const n=parseInt($('#gn').value,10),o=chs[0]&&chs[0].pre?1:0;if(n>=1&&n+o<=chs.length)jump(n-1+o)};
 $('#gn').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
@@ -208,7 +195,6 @@ function savePos(){const s=curSec();if(!name||!s||s.dataset.i===undefined)return
 window.onscroll=()=>{
   clearTimeout(tt);tt=setTimeout(setTitle,120);
   clearTimeout(st);st=setTimeout(savePos,300);
-  autoMore();
 };
 addEventListener('pagehide',savePos);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)savePos()});
